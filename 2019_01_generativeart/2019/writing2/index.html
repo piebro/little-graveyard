@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>writing2</title>
+  <script src="../../lib/canvas2svg.js"> </script>
+  <script src="../../lib/quicksettings.min.js"> </script>
+  <script src="../../lib/opentype.min.js"> </script>
+
+  <script src="../../lib/gat-1.0.js"> </script>
+  <!-- <script src="../../../gat/gat.js"> </script> -->
+  <script src="../../lib/gat.path-0.4.js"> </script>
+  <script src="../../lib/gat.alphabet-0.2.js"> </script>
+
+</head>
+</html>
+
+<script>
+
+let centeredCanvasObj = gat.getCenteredCanvasObj([1000,600])
+let canvas = centeredCanvasObj.canvas
+canvas.style.backgroundColor="#EEEEEE"
+gat.addSaveAsSvgKey("s", draw, canvas)
+let redraw = draw.bind(null, canvas.getContext("2d"))
+
+
+let visibleFonts = [
+  "my_connected",
+  "my_monospace",
+  "cnc_v",
+  "SourceCodePro-ExtraLight",
+  "Roboto-Black",
+  "LeagueScript",
+  "BadScript-Regular",
+  "DawningofaNewDay",
+  "hershey_astrology",
+  "hershey_cyrilic_1",
+  "hershey_japanese",
+  "hershey_futural",
+  "hershey_gothgrt",
+  "hershey_gothitt",
+  "hershey_greeks",
+  "hershey_rowmant",
+]
+let fontUrlMap = {
+  "Roboto-Black": "../../data-and-scripts/fonts/Roboto-Black.ttf",
+  "cnc_v": "../../data-and-scripts/fonts/cnc_v.ttf",
+  "NotoSansCJKjp": "../../data-and-scripts/fonts/NotoSansCJKjp-Thin.otf",
+  "SourceCodePro-ExtraLight": "../../data-and-scripts/fonts/SourceCodePro-ExtraLight.ttf",
+  "BadScript-Regular": "../../data-and-scripts/fonts/BadScript-Regular.ttf",
+  "DawningofaNewDay": "../../data-and-scripts/fonts/DawningofaNewDay.ttf",
+  "LeagueScript": "../../data-and-scripts/fonts/LeagueScript.ttf",
+}
+
+function addGUI(){
+  async function loadFontInCssFromUrl(fontName, fontPath) {
+      const font = new FontFace(fontName, "url("+fontPath+")");
+      await font.load();
+      document.fonts.add(font);
+      document.body.classList.add('fonts-loaded');
+  }
+
+  async function loadFontInCssFromArrayBuffer(fontName, fontArrayBuffer) {
+      const font = new FontFace(fontName, fontArrayBuffer);
+      await font.load();
+      document.fonts.add(font);
+      document.body.classList.add('fonts-loaded');
+  }
+
+  let fontChangedCallback = function(){
+    let fontName = panel.settings.getValue("Fonts").value
+    if (gat.alphabet[fontName]==undefined){
+      fontUrl = fontUrlMap[fontName]
+      gat.alphabet.tools.loadOpentypeFontFromUrl(
+        fontUrl, fontName, fontChangedCallback)
+      loadFontInCssFromUrl(fontName, fontUrl)
+      return
+    }
+    panel.details.setValue("Available Characters",gat.alphabet[fontName].availableCharacters)
+
+    // cnc_v hat keine Flächen und kann sonst nicht angezeigt werden
+    if (fontName == "cnc_v") fontName = "georgia"
+    panel.details.overrideStyle("Available Characters", "fontFamily", fontName);
+    panel.settings.overrideStyle("Text", "fontFamily", fontName);
+
+    redraw()
+  }
+
+  let fileChooserCallback = function(file){
+    let fontName = file.name.split(".")[0]
+    let reader = new FileReader();
+    reader.readAsArrayBuffer(file)
+    reader.onloadend = function(){
+      gat.alphabet.tools.loadOpentypeFontFromArrayBuffer(this.result, fontName, redraw)
+      loadFontInCssFromArrayBuffer(fontName, this.result)
+      visibleFonts.push(fontName)
+      panel.settings.removeControl("Fonts")
+      panel.settings.addDropDown("Fonts", visibleFonts, fontChangedCallback);
+      panel.settings.setValue("Fonts",visibleFonts.length-1)
+    }
+  }
+
+  let panel = {}
+
+  panel.details = QuickSettings.create(window.innerWidth-10-200, 10, "details");
+  panel.details.addFileChooser("Add Font", "Click to choose Font","", fileChooserCallback);
+  panel.details.addNumber("Screen Width", 0, 10000, 1000, 1, redraw)
+  panel.details.addNumber("Screen Height", 0, 10000, 600, 1, redraw)
+  panel.details.addTextArea("Available Characters", "");
+  panel.details.overrideStyle("Available Characters", "fontSize", "16px");
+  panel.details.collapse()
+
+  panel.settings = QuickSettings.create(10, 10, "settings");
+  panel.settings.addDropDown("Fonts", visibleFonts, fontChangedCallback);
+  panel.settings.addTextArea("Text", "Example Text", redraw);
+  panel.settings.overrideStyle("Text", "fontSize", "16px");
+  panel.settings.addBoolean("Fit to screen", false, redraw)
+  panel.settings.addNumber("Stroke Width", 1, 20, 3, 1, redraw)
+
+
+  return panel
+}
+
+let panel = addGUI()
+panel.settings.setValue("Fonts",0)
+function draw(ctx){
+  centeredCanvasObj.size = [
+    panel.details.getValue("Screen Width"),panel.details.getValue("Screen Height")
+  ]
+  ctx.clearRect(0, 0,canvas.width,canvas.height);
+  ctx.beginPath();
+
+  let current_font = panel.settings.getValue("Fonts").value
+  let current_text = panel.settings.getValue("Text")
+  let fit_to_screen = panel.settings.getValue("Fit to screen")
+
+
+
+
+  let pb = gat.path.textToPathAndBbox(current_text, gat.alphabet[current_font])
+  let a = 0
+  gat.path.drawPathBbox(ctx, pb.path, pb.bbox, [canvas.width*0.1,canvas.height*0.1,canvas.width*0.9,canvas.height*0.9], 0, !fit_to_screen)
+
+  ctx.lineJoin="round";
+  ctx.lineCap="round";
+  ctx.lineWidth=panel.settings.getValue("Stroke Width");
+  ctx.stroke()
+}
+
+
+
+</script>

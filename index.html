@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>generativeart</title>
+    <link rel="manifest" href="progressive-web-app/manifest.json"></link>
+    <script src="progressive-web-app/pwabuilder-sw-register.js"></script>
+    <script src="progressive-web-app/manup.js"></script>
+    <script src="index.js"></script>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+
+    <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+
+<style>
+div.center {
+  position: relative;
+  padding-top: 80px;
+  padding-bottom: 200px;
+  width: 80%;
+  margin: auto;
+
+  text-align: center;
+  font-family:Courier;
+  font-size:25px;
+}
+
+div.textbox {
+  text-align: left;
+  padding-bottom:40px;
+}
+
+a {
+  text-decoration: none;
+  color:#f95959;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+td {
+  height: 80px;
+}
+td.date {
+  color: #a95959;
+  font-size: 70%;
+  height: 80px;
+}
+
+@media (min-width: 800px) {
+    div.center {
+      width: 640px;
+    }
+}
+</style>
+
+<div class="center">
+	<div class="textbox">
+    This is my little graveyard.
+		<br>
+		<br>
+		And <a href="https://github.com/piebro/litle-graveyard">here</a> is all the graveyard code. For current projects go to <a href="https://piebro.de">piebro.de</a>
+  </div>
+  <table style="width:100%">
+    <tr>
+      <td class="date">Jan, 2019</td>
+      <td><a href="2017_08_MyWebsite">GenerativeArt</a></td>
+    </tr>
+    <tr>
+      <td class="date">Aug, 2017</td>
+      <td><a href="2019_01_generativeart">MyWebsite</a></td>
+    </tr>
+</div>
+
+</body>
+</html>

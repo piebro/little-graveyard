@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Disortion</title>
+    <script src="../../lib/canvas2svg.js"> </script>
+    <script src="../../lib/quicksettings.min.js"> </script>
+
+    <script src="../../lib/gat-1.0.js"> </script>
+</head>
+<body>
+<script>
+
+let centeredCanvasObj = gat.getCenteredCanvasObj([1000,1000])
+let canvas = centeredCanvasObj.canvas
+canvas.style.backgroundColor="#EEEEEE"
+gat.addSaveAsSvgKey("s", draw, canvas)
+let redraw = draw.bind(null, canvas.getContext("2d"))
+let panel = addGUI()
+
+redraw()
+
+function addGUI(){
+  let panel = {}
+
+  panel.settings = QuickSettings.create(10, 10, "settings");
+  panel.settings.addNumber("Disortion", 0, 1000, 100, 10, redraw)
+  panel.settings.addNumber("Length", 100, 900, 500, 50, redraw)
+  panel.settings.addNumber("Space between Lines", 5, 40, 10, 1, redraw)
+  panel.settings.addDropDown("Shape", ["circle","lines"], redraw);
+
+  panel.seed = gat.Randomizer().next()
+  panel.settings.addButton("New Seed", function(){
+    panel.seed = gat.Randomizer().next()
+    redraw()
+  });
+  return panel
+}
+
+function draw(ctx){
+  ctx.clearRect(0, 0,canvas.width,canvas.height);
+  ctx.beginPath();
+
+  let ran = gat.Randomizer(panel.seed)
+
+  let args = {
+    resolution: 80,
+    radius: 220,
+  }
+
+  let disortion = panel.settings.getValue("Disortion")
+  let length = panel.settings.getValue("Length")
+  let spaceBetweenlines = Math.max(1,panel.settings.getValue("Space between Lines"))
+  let shape = panel.settings.getValue("Shape").value
+
+  let stepsCount = length/spaceBetweenlines
+  let stepSize = disortion/stepsCount
+  let drawingStartY = (canvas.height-(stepsCount*spaceBetweenlines))/2
+
+
+  let points;
+  if (shape=="circle"){
+    points = getInitCircle(args, drawingStartY)
+    drawCircle(ctx, points, true)
+  } else {
+    points = getInitLine(args, drawingStartY);
+    drawLine(ctx, points)
+  }
+
+  let translate = []
+  for(let i=0; i<stepsCount; i++){
+    for(let j=0; j<points.length; j++){
+      points[j][0] += ran.next(-stepSize,stepSize)
+      points[j][1] += ran.next(-stepSize, stepSize) + spaceBetweenlines
+    }
+
+    if (shape=="circle"){
+      drawCircle(ctx, points, false)
+    } else {
+      drawLine(ctx, points)
+    }
+  }
+
+  ctx.lineJoin="round";
+  ctx.lineCap="round";
+  ctx.lineWidth=2;
+  ctx.stroke()
+}
+
+function drawLine(ctx, points){
+  ctx.moveTo(...points[0])
+  for(let i=1; i<points.length; i++){
+    ctx.lineTo(...points[i])
+  }
+}
+
+function drawCircle(ctx, points, useMoveTo){
+  if (useMoveTo){
+    ctx.moveTo(...points[points.length-1])
+  } else {
+    ctx.lineTo(...points[points.length-1])
+  }
+
+  for(let i=0; i<points.length; i++){
+    ctx.lineTo(...points[i])
+  }
+}
+
+function getInitLine(args, drawingStartY){
+  let points = []
+  let deltaX = 800/50
+  for(let i=0; i<50; i++){
+    points.push([100+i*deltaX,drawingStartY])
+  }
+  return points
+}
+
+function getInitCircle(args, drawingStartY){
+  let deltaAngle = Math.PI*2/args.resolution
+
+  let circlePoints = []
+  for(let i=0; i<args.resolution; i++){
+    let angle = deltaAngle*i
+    circlePoints.push([
+      500+Math.cos(angle)*args.radius*2,
+      drawingStartY-Math.sin(angle)*args.radius/2
+    ])
+  }
+  return circlePoints
+}
+
+
+
+</script>
+</body>
+</html>
